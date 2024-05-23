@@ -64,7 +64,9 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   "TxWork.pipelines.TxworkPipeline": 300,
+   "TxWork.pipelines.TxworkCheckPipeline": 300,
+   "TxWork.pipelines.TxworkFilePipeline": 301,
+   "TxWork.pipelines.TxworkMongoPipeline": 302,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

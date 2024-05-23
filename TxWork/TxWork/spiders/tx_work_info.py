@@ -1,3 +1,5 @@
+import hashlib
+import redis
 import scrapy
 from scrapy import cmdline
 from scrapy.http import HtmlResponse
@@ -8,9 +10,25 @@ class TxWorkInfoSpider(scrapy.Spider):
     allowed_domains = ["careers.tencent.com"]
     # start_urls = ["https://careers.tencent.com/search.html"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.redis_client = redis.Redis()
+
+    def __del__(self):
+        self.redis_client.close()
+
     def start_requests(self):
         url = 'https://careers.tencent.com/search.html?index={}&keyword=python'
         for page in range(1, 6):
+            md5_hash = hashlib.md5()
+            md5_hash.update(url.format(page).encode('utf-8'))
+            hash_value = md5_hash.hexdigest()
+
+            if self.redis_client.get(f'tx_work_url_filter:{hash_value}'):
+                print('duplicate url, skip it')
+                continue
+            else:
+                self.redis_client.set(f'tx_work_url_filter:{hash_value}', url.format(page))
             yield scrapy.Request(url=url.format(page))
 
     def parse(self, response: HtmlResponse, **kwargs):
